@@ -1,21 +1,26 @@
 configuration CreateADPDC
 {
-   param
-   (
+    param
+    (
         [Parameter(Mandatory)]
         [String]$DomainName,
 
         [Parameter(Mandatory)]
         [System.Management.Automation.PSCredential]$Admincreds,
 
-        [Int]$RetryCount=20,
+        [Int]$RetryCount=19,
         [Int]$RetryIntervalSec=30
     )
 
     Import-DscResource -ModuleName xActiveDirectory, xStorage, xNetworking, PSDesiredStateConfiguration, xPendingReboot
-    [System.Management.Automation.PSCredential ]$DomainCreds = New-Object System.Management.Automation.PSCredential ("${DomainName}\$($Admincreds.UserName)", $Admincreds.Password)
-    $Interface=Get-NetAdapter|Where Name -Like "Ethernet*"|Select-Object -First 1
-    $InterfaceAlias=$($Interface.Name)
+
+    [System.Management.Automation.PSCredential]$DomainCreds = New-Object System.Management.Automation.PSCredential ("${DomainName}\$($Admincreds.UserName)", $Admincreds.Password)
+
+    $Interface = Get-NetAdapter | Where-Object { $_.Name -Like "Ethernet*" } | Select-Object -First 1
+    if (-not $Interface) {
+        throw "No Ethernet adapter found."
+    }
+    $InterfaceAlias = $Interface.Name
 
     Node localhost
     {
@@ -32,9 +37,9 @@ configuration CreateADPDC
 
         Script EnableDNSDiags
         {
-      	    SetScript = {
+            SetScript = {
                 Set-DnsServerDiagnostics -All $true
-                Write-Verbose -Verbose "Enabling DNS client diagnostics"
+                Write-Verbose -Message "Enabling DNS client diagnostics"
             }
             GetScript =  { @{} }
             TestScript = { $false }
@@ -56,24 +61,24 @@ configuration CreateADPDC
             DependsOn = "[WindowsFeature]DNS"
         }
 
-        xWaitforDisk Disk2
+        xWaitforDisk Disk1
         {
-            DiskNumber = 2
-            RetryIntervalSec =$RetryIntervalSec
+            DiskNumber = 1
+            RetryIntervalSec = $RetryIntervalSec
             RetryCount = $RetryCount
         }
 
         xDisk ADDataDisk {
-            DiskNumber = 2
+            DiskNumber = 1
             DriveLetter = "F"
-            DependsOn = "[xWaitForDisk]Disk2"
+            DependsOn = "[xWaitForDisk]Disk1"
         }
 
         WindowsFeature ADDSInstall
         {
             Ensure = "Present"
             Name = "AD-Domain-Services"
-            DependsOn="[WindowsFeature]DNS"
+            DependsOn = "[WindowsFeature]DNS"
         }
 
         WindowsFeature ADDSTools
@@ -101,10 +106,9 @@ configuration CreateADPDC
             DependsOn = @("[WindowsFeature]ADDSInstall", "[xDisk]ADDataDisk")
         }
 
-        xPendingReboot RebootAfterPromotion{
+        xPendingReboot RebootAfterPromotion {
             Name = "RebootAfterPromotion"
             DependsOn = "[xADDomain]FirstDS"
         }
-
-   }
+    }
 }
