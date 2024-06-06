@@ -1,17 +1,23 @@
 configuration PrepareADBDC
 {
-   param
+    param
     (
         [Parameter(Mandatory)]
         [String]$DNSServer,
 
-        [Int]$RetryCount=20,
+        [Int]$RetryCount=16,
         [Int]$RetryIntervalSec=30
     )
 
-    Import-DscResource -ModuleName  xStorage, xNetworking
-    $Interface=Get-NetAdapter|Where Name -Like "Ethernet*"|Select-Object -First 1
-    $InterfaceAlias=$($Interface.Name)
+    Import-DscResource -ModuleName xStorage, xNetworking
+
+    $Interface = Get-NetAdapter | Where-Object { $_.Name -Like "Ethernet*" } | Select-Object -First 1
+    if (-not $Interface) {
+        throw "No Ethernet adapter found."
+    } else {
+        Write-Verbose -Message "Network adapter found: $($Interface.Name)"
+    }
+    $InterfaceAlias = $Interface.Name
 
     Node localhost
     {
@@ -20,18 +26,18 @@ configuration PrepareADBDC
             RebootNodeIfNeeded = $true
         }
 
-        xWaitforDisk Disk2
+        xWaitforDisk Disk1
         {
-                DiskNumber = 2
-                RetryIntervalSec =$RetryIntervalSec
-                RetryCount = $RetryCount
+            DiskNumber = 1
+            RetryIntervalSec = $RetryIntervalSec
+            RetryCount = $RetryCount
         }
 
         xDisk ADDataDisk
         {
-            DiskNumber = 2
+            DiskNumber = 1
             DriveLetter = "F"
-            DependsOn = "[xWaitForDisk]Disk2"
+            DependsOn = "[xWaitForDisk]Disk1"
         }
 
         WindowsFeature ADDSInstall
@@ -59,7 +65,7 @@ configuration PrepareADBDC
             Address        = $DNSServer
             InterfaceAlias = $InterfaceAlias
             AddressFamily  = 'IPv4'
-            DependsOn="[WindowsFeature]ADDSInstall"
+            DependsOn = "[WindowsFeature]ADDSInstall"
         }
-   }
+    }
 }
