@@ -16,11 +16,21 @@ configuration CreateADPDC
 
     [System.Management.Automation.PSCredential]$DomainCreds = New-Object System.Management.Automation.PSCredential ("${DomainName}\$($Admincreds.UserName)", $Admincreds.Password)
 
-    $Interface = Get-NetAdapter | Where-Object { $_.Name -Like "Ethernet*" } | Select-Object -Last 1
+    $Interface = Get-NetAdapter | Where-Object { 
+        $_.Status -eq "Up" -and 
+        $_.Name -like "Ethernet*" -and 
+        $_.InterfaceDescription -like "Microsoft*" 
+    } | Select-Object -First 1
+    
+    # Check if a likely primary Ethernet adapter with the correct description was found
     if (-not $Interface) {
-        throw "No Ethernet adapter found."
+        throw "No suitable Ethernet adapter found."
+    } else {
+        Write-Verbose -Message "Suitable network adapter found: Name = $($Interface.Name), Description = $($Interface.InterfaceDescription)"
     }
-    $InterfaceAlias = "Ethernet" #$Interface.Name
+    
+    # Use the InterfaceAlias for further configurations or operations
+    $InterfaceAlias = $Interface.Name
 
     Node localhost
     {
