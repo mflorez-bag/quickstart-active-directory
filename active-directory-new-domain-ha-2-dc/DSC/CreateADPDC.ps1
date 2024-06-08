@@ -20,7 +20,7 @@ configuration CreateADPDC
     if (-not $Interface) {
         throw "No Ethernet adapter found."
     }
-    $InterfaceAlias = $Interface.Name
+    $InterfaceAlias = "Ethernet" #$Interface.Name
 
     Node localhost
     {

@@ -17,7 +17,7 @@ configuration PrepareADBDC
     } else {
         Write-Verbose -Message "Network adapter found: $($Interface.Name)"
     }
-    $InterfaceAlias = $Interface.Name
+    $InterfaceAlias = "Ethernet" # $Interface.Name
 
     Node localhost
     {
