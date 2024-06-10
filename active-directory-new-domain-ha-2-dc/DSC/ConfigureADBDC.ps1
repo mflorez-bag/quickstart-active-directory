@@ -8,8 +8,8 @@ configuration ConfigureADBDC
         [Parameter(Mandatory)]
         [System.Management.Automation.PSCredential]$Admincreds,
 
-        [Int]$RetryCount=25,
-        [Int]$RetryIntervalSec=30
+        [Int]$RetryCount=35,
+        [Int]$RetryIntervalSec=40
     )
 
     Import-DscResource -ModuleName xActiveDirectory, xPendingReboot
