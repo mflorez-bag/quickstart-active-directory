@@ -5,7 +5,7 @@ configuration PrepareADBDC
         [Parameter(Mandatory)]
         [String]$DNSServer,
 
-        [Int]$RetryCount=16,
+        [Int]$RetryCount=25,
         [Int]$RetryIntervalSec=30
     )
 

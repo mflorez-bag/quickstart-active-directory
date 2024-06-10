@@ -8,7 +8,7 @@ configuration CreateADPDC
         [Parameter(Mandatory)]
         [System.Management.Automation.PSCredential]$Admincreds,
 
-        [Int]$RetryCount=19,
+        [Int]$RetryCount=25,
         [Int]$RetryIntervalSec=30
     )
 
