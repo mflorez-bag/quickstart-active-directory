@@ -30,7 +30,7 @@ configuration ConfigureADBDC
             RetryCount = $RetryCount
             RetryIntervalSec = $RetryIntervalSec
         }
- <#
+
         xADDomainController BDC
         {
             DomainName = $DomainName
@@ -41,7 +41,7 @@ configuration ConfigureADBDC
             SysvolPath = "F:\SYSVOL"
             DependsOn = "[xWaitForADDomain]DscForestWait"
         }
-
+ <#
         Script UpdateDNSForwarder
         {
             SetScript =
@@ -59,11 +59,11 @@ configuration ConfigureADBDC
             TestScript = { $false}
             DependsOn = "[xADDomainController]BDC"
         }
-
+#>
         xPendingReboot RebootAfterPromotion {
             Name = "RebootAfterDCPromotion"
             DependsOn = "[xADDomainController]BDC"
-        }#>
+        }
 
     }
 }
